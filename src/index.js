@@ -8,7 +8,10 @@ export { WAIT_FOR_ACTION, ERROR_ACTION, CALLBACK_ARGUMENT, CALLBACK_ERROR_ARGUME
 const fsaCompliantArgumentCb = action => action.payload || action.data || {};
 const fsaCompliantErrorArgumentCb = action => action.error || action.err || new Error('action.error not specified.');
 
-export default function() {
+const successActionCb = action => action[WAIT_FOR_ACTION];
+const errorActionCb = action => action[ERROR_ACTION];
+
+export default function(getSuccessAction = successActionCb, getErrorAction = errorActionCb) {
   const pendingActionList = [];
   const promisesList = [];
   const getPromisesList = () => promisesList;
@@ -28,12 +31,12 @@ export default function() {
       pendingActionList.splice(pendingActionList.indexOf(pendingActionInfo), 1);
     }
 
-    if (!action[WAIT_FOR_ACTION]) {
+    const successAction = getSuccessAction(action);
+    const errorAction = getErrorAction(action);
+
+    if (!successAction) {
       return next(action);
     }
-
-    const successAction = action[WAIT_FOR_ACTION];
-    const errorAction = action[ERROR_ACTION];
 
     const newPendingActionInfo = {};
 
